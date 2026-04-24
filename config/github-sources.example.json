@@ -1,0 +1,13 @@
+{
+  "sources": [
+    {
+      "id": "backend-service",
+      "type": "github",
+      "displayName": "Backend Service",
+      "owner": "example-org",
+      "repo": "backend-service",
+      "defaultBaseRef": "main",
+      "allowedTargets": ["github_pr", "github_branch", "github_commit_range"]
+    }
+  ]
+}

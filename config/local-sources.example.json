@@ -1,0 +1,12 @@
+{
+  "sources": [
+    {
+      "id": "local-api",
+      "type": "local",
+      "displayName": "Local API",
+      "root": "/absolute/path/to/local-api",
+      "defaultBaseRef": "main",
+      "allowedTargets": ["local_working_tree", "local_branch", "local_commit_range"]
+    }
+  ]
+}

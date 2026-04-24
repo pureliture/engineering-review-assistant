@@ -1,0 +1,38 @@
+{
+  "name": "engineering-review-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Data-only ChatGPT MCP app for evidence-backed engineering review of allowlisted repository changes.",
+  "scripts": {
+    "build": "npm run build:server && npm run build:widget",
+    "build:server": "tsc -p tsconfig.json",
+    "build:widget": "tsc -p tsconfig.widget.json && vite build",
+    "test": "npm run build && node --test \"dist/tests/**/*.test.js\"",
+    "start": "node dist/src/index.js",
+    "dev": "tsx src/index.ts",
+    "widget:dev": "vite --host 127.0.0.1",
+    "inspect": "npx @modelcontextprotocol/inspector http://127.0.0.1:2091/mcp"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.21.0",
+    "express": "^4.19.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.2",
+    "jsdom": "^29.0.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^8.0.10"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

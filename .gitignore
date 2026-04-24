@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+coverage/
+
+# Local machine files
+.DS_Store
+
+# Local environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Local source allowlists
+config/local-sources.json
+config/github-sources.json
+
+# Logs
+logs/
+*.log
