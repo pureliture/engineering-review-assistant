@@ -3,106 +3,22 @@ import type {
   ChangeSummary,
   EvidenceItem,
   Finding,
-  PromptInjectionEvent,
-  RedactionRecord,
   ReviewResult
 } from "../types.js";
 import { stableId } from "../id.js";
-import { detectPromptInjection, neutralizeRepositoryInstructions } from "../policy/prompt-injection.js";
-import { redactText } from "../policy/redaction.js";
-
-function evidenceId(index: number): string {
-  return `E-${String(index).padStart(4, "0")}`;
-}
-
-function primaryArea(filePath: string): string {
-  const parts = filePath.split("/");
-  return parts.length > 1 ? parts[0] : ".";
-}
-
-function isTestFile(filePath: string): boolean {
-  return /(^|\/)(__tests__|tests?|specs?)(\/|$)|\.(test|spec)\.[jt]sx?$/.test(filePath);
-}
-
-function isDocFile(filePath: string): boolean {
-  return /\.mdx?$|(^|\/)docs\//i.test(filePath);
-}
-
-function migrationSignal(filePath: string, patch = ""): boolean {
-  return /migration|schema|database|db|config|compat|version/i.test(filePath) || /migrat|schema|backward|compat/i.test(patch);
-}
-
-function securitySignal(filePath: string, patch = ""): boolean {
-  return /auth|session|token|secret|password|crypto|permission|security/i.test(filePath + "\n" + patch);
-}
+import { buildEvidence } from "./evidence-builder.js";
+import {
+  isDocFile,
+  isTestFile,
+  migrationSignal,
+  primaryArea,
+  securitySignal,
+  severityCounts,
+  verdictForFindings
+} from "./change-signals.js";
 
 export function buildChangeSummary(change: ChangeData): ChangeSummary {
-  const evidenceIndex: Record<string, EvidenceItem> = {};
-  const redactions: RedactionRecord[] = [];
-  const promptInjectionEvents: PromptInjectionEvent[] = [];
-  const repoDocs: ChangeSummary["repoDocs"] = [];
-  let nextEvidence = 1;
-
-  for (const file of change.files) {
-    const ref = evidenceId(nextEvidence++);
-    const rawPatch = file.patch ?? "";
-    const redacted = redactText(neutralizeRepositoryInstructions(rawPatch), file.path);
-    redactions.push(...redacted.redactions);
-    promptInjectionEvents.push(...detectPromptInjection(rawPatch, "file", file.path, ref));
-    evidenceIndex[ref] = {
-      kind: "diff",
-      path: file.path,
-      excerpt: redacted.text.slice(0, 900),
-      redacted: redacted.redactions.length > 0
-    };
-  }
-
-  for (const doc of change.repoDocs) {
-    const ref = evidenceId(nextEvidence++);
-    const redacted = redactText(neutralizeRepositoryInstructions(doc.excerpt), doc.path);
-    redactions.push(...redacted.redactions);
-    promptInjectionEvents.push(...detectPromptInjection(doc.excerpt, "doc", doc.path, ref));
-    evidenceIndex[ref] = {
-      kind: "doc",
-      path: doc.path,
-      excerpt: redacted.text.slice(0, 900),
-      redacted: redacted.redactions.length > 0
-    };
-    repoDocs.push({ path: doc.path, excerpt: redacted.text.slice(0, 900), evidenceRef: ref });
-  }
-
-  let agentsGuidelines: ChangeSummary["agentsGuidelines"];
-  if (change.agentsGuidelines) {
-    const ref = evidenceId(nextEvidence++);
-    const redacted = redactText(neutralizeRepositoryInstructions(change.agentsGuidelines.excerpt), change.agentsGuidelines.path);
-    redactions.push(...redacted.redactions);
-    evidenceIndex[ref] = {
-      kind: "policy",
-      path: change.agentsGuidelines.path,
-      excerpt: redacted.text.slice(0, 900),
-      redacted: redacted.redactions.length > 0
-    };
-    agentsGuidelines = { path: change.agentsGuidelines.path, excerpt: redacted.text.slice(0, 900), evidenceRef: ref };
-  }
-
-  if (change.ciEvidence?.selectedLogExcerpts) {
-    for (const log of change.ciEvidence.selectedLogExcerpts) {
-      const ref = evidenceId(nextEvidence++);
-      const redacted = redactText(neutralizeRepositoryInstructions(log));
-      redactions.push(...redacted.redactions);
-      promptInjectionEvents.push(...detectPromptInjection(log, "ci_log", undefined, ref));
-      evidenceIndex[ref] = {
-        kind: "ci",
-        excerpt: redacted.text.slice(0, 900),
-        redacted: redacted.redactions.length > 0
-      };
-    }
-  }
-
-  for (const message of change.gitMetadata.commitMessages ?? []) {
-    promptInjectionEvents.push(...detectPromptInjection(message, "commit_message"));
-  }
-
+  const evidence = buildEvidence(change);
   const additions = change.files.reduce((sum, file) => sum + (file.additions ?? 0), 0);
   const deletions = change.files.reduce((sum, file) => sum + (file.deletions ?? 0), 0);
   const fileMap = Object.fromEntries(
@@ -134,42 +50,18 @@ export function buildChangeSummary(change: ChangeData): ChangeSummary {
         .map((file) => file.path)
         .slice(0, 8)
     },
-    evidenceIndex,
-    rawDiffsByFile: Object.fromEntries(
-      Object.entries(change.rawDiffsByFile).map(([filePath, patch]) => [
-        filePath,
-        redactText(neutralizeRepositoryInstructions(patch), filePath).text
-      ])
-    ),
+    evidenceIndex: evidence.evidenceIndex,
+    rawDiffsByFile: evidence.rawDiffsByFile,
     fileMap,
     gitMetadata: change.gitMetadata,
-    ciEvidence: change.ciEvidence
-      ? {
-          checks: change.ciEvidence.checks,
-          selectedLogExcerpts: change.ciEvidence.selectedLogExcerpts?.map((log) => redactText(neutralizeRepositoryInstructions(log)).text)
-        }
-      : undefined,
-    repoDocs,
-    agentsGuidelines,
-    redactions,
-    promptInjectionEvents
+    ciEvidence: evidence.ciEvidence,
+    repoDocs: evidence.repoDocs,
+    agentsGuidelines: evidence.agentsGuidelines,
+    redactions: evidence.redactions,
+    promptInjectionEvents: evidence.promptInjectionEvents
   };
 
   return summary;
-}
-
-function countBySeverity(findings: Finding[]): { critical: number; important: number; minor: number } {
-  return {
-    critical: findings.filter((finding) => finding.severity === "critical").length,
-    important: findings.filter((finding) => finding.severity === "important").length,
-    minor: findings.filter((finding) => finding.severity === "minor").length
-  };
-}
-
-function verdictFor(findings: Finding[]): ReviewResult["verdict"] {
-  if (findings.some((finding) => finding.severity === "critical")) return "high_risk";
-  if (findings.some((finding) => finding.severity === "important")) return "needs_attention";
-  return "low_risk";
 }
 
 function firstEvidence(summary: ChangeSummary, predicate: (item: EvidenceItem) => boolean): string[] {
@@ -230,11 +122,11 @@ export function buildCodeReview(summary: ChangeSummary, options?: { maxFindings?
   }
 
   const selectedFindings = findings.slice(0, options?.maxFindings ?? 20);
-  const counts = countBySeverity(selectedFindings);
+  const counts = severityCounts(selectedFindings);
   return {
     reviewId: stableId("rev_code", { summaryId: summary.summaryId, findings: selectedFindings }),
     summaryId: summary.summaryId,
-    verdict: verdictFor(selectedFindings),
+    verdict: verdictForFindings(selectedFindings),
     counts: {
       ...counts,
       filesChanged: summary.changeSummary.filesChanged,
@@ -292,11 +184,11 @@ export function buildArchitectureReview(summary: ChangeSummary): ReviewResult {
     });
   }
 
-  const counts = countBySeverity(findings);
+  const counts = severityCounts(findings);
   return {
     reviewId: stableId("rev_arch", { summaryId: summary.summaryId, findings }),
     summaryId: summary.summaryId,
-    verdict: verdictFor(findings),
+    verdict: verdictForFindings(findings),
     counts: {
       ...counts,
       filesChanged: summary.changeSummary.filesChanged,
