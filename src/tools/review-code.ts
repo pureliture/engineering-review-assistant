@@ -1,7 +1,7 @@
 import { evidenceStore } from "../review/evidence-store.js";
 import { buildCodeReview } from "../review/report-builder.js";
 import { reviewCodeInputSchema } from "../types.js";
-import { reviewCodeOutputSchema } from "./output-schemas.js";
+import { reviewCodeSuccessOutputSchema } from "./output-schemas.js";
 import { ok, toolError, type AppToolResult } from "./result.js";
 
 export async function reviewCodeHandler(input: unknown): Promise<AppToolResult> {
@@ -13,7 +13,7 @@ export async function reviewCodeHandler(input: unknown): Promise<AppToolResult> 
     const review = buildCodeReview(summary, { maxFindings: args.maxFindings });
     evidenceStore.saveReview(review);
 
-    const structuredContent = reviewCodeOutputSchema.parse({
+    const structuredContent = reviewCodeSuccessOutputSchema.parse({
         reviewId: review.reviewId,
         summaryId: review.summaryId,
         verdict: review.verdict,

@@ -2,7 +2,7 @@ import { buildChangeSummary } from "../review/report-builder.js";
 import { evidenceStore } from "../review/evidence-store.js";
 import { loadChangeData } from "../sources/registry.js";
 import { summarizeChangesInputSchema } from "../types.js";
-import { summarizeChangesOutputSchema } from "./output-schemas.js";
+import { summarizeChangesSuccessOutputSchema } from "./output-schemas.js";
 import { ok, toolError, type AppToolResult } from "./result.js";
 
 export async function summarizeChangesHandler(input: unknown): Promise<AppToolResult> {
@@ -18,7 +18,7 @@ export async function summarizeChangesHandler(input: unknown): Promise<AppToolRe
     const summary = buildChangeSummary(changeData);
     evidenceStore.saveSummary(summary);
 
-    const structuredContent = summarizeChangesOutputSchema.parse({
+    const structuredContent = summarizeChangesSuccessOutputSchema.parse({
         summaryId: summary.summaryId,
         contextId: context.contextId,
         target: {

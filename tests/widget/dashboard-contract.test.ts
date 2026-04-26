@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import "../helpers/fixture-env.js";
 import { containsUnsafeSecret } from "../../src/policy/redaction.js";
 import { createServer } from "../../src/server.js";
 import { exportEngineeringPacketHandler } from "../../src/tools/export-packet.js";

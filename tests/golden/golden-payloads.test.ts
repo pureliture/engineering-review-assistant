@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import "../helpers/fixture-env.js";
 import { containsUnsafeSecret } from "../../src/policy/redaction.js";
 import { exportEngineeringPacketHandler } from "../../src/tools/export-packet.js";
 import { reviewArchitectureHandler } from "../../src/tools/review-architecture.js";

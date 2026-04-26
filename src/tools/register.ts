@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ZodTypeAny } from "zod";
 import {
+  createCodexTaskProposalInputSchema,
   exportPacketInputSchema,
   renderDashboardInputSchema,
   reviewArchitectureInputSchema,
@@ -10,12 +11,14 @@ import {
   summarizeChangesInputSchema
 } from "../types.js";
 import { exportEngineeringPacketHandler } from "./export-packet.js";
+import { createCodexTaskProposalHandler } from "./codex-task-proposal.js";
 import { reviewArchitectureHandler } from "./review-architecture.js";
 import { reviewCodeHandler } from "./review-code.js";
 import { renderDashboardHandler } from "./render-dashboard.js";
 import { selectContextHandler } from "./context.js";
 import { summarizeChangesHandler } from "./summarize.js";
 import {
+  createCodexTaskProposalOutputSchema,
   exportPacketOutputSchema,
   renderDashboardOutputSchema,
   reviewArchitectureOutputSchema,
@@ -112,6 +115,17 @@ const reviewTools: ReviewToolDefinition[] = [
     invoking: "Preparing review packet",
     invoked: "Review packet ready",
     handler: exportEngineeringPacketHandler
+  },
+  {
+    name: "review.create_codex_task_proposal",
+    title: "Create Codex Task Proposal",
+    description:
+      "Use this when review.summarize_changes plus review.review_code or review.review_architecture have completed and the user wants a paste-safe Codex task brief for a separate worktree or branch. Do not use this when the user asks the app to modify files, generate and apply a patch in the same step, run tests, create branches, commit, push, or open PRs.",
+    inputSchema: createCodexTaskProposalInputSchema,
+    outputSchema: createCodexTaskProposalOutputSchema,
+    invoking: "Preparing Codex task proposal",
+    invoked: "Codex task proposal ready",
+    handler: createCodexTaskProposalHandler
   },
   {
     name: "review.render_dashboard",

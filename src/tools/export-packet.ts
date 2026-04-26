@@ -1,7 +1,7 @@
 import { evidenceStore } from "../review/evidence-store.js";
 import { buildEngineeringPacket } from "../review/packet-builder.js";
 import { exportPacketInputSchema } from "../types.js";
-import { exportPacketOutputSchema } from "./output-schemas.js";
+import { exportPacketSuccessOutputSchema } from "./output-schemas.js";
 import { ok, toolError, type AppToolResult } from "./result.js";
 
 export async function exportEngineeringPacketHandler(input: unknown): Promise<AppToolResult> {
@@ -20,7 +20,7 @@ export async function exportEngineeringPacketHandler(input: unknown): Promise<Ap
     const packet = buildEngineeringPacket(summary, reviews, args.maxEvidenceItems);
     evidenceStore.savePacket(packet);
 
-    const structuredContent = exportPacketOutputSchema.parse({
+    const structuredContent = exportPacketSuccessOutputSchema.parse({
         packetId: packet.packetId,
         summaryId: packet.summaryId,
         title: packet.title,

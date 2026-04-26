@@ -2,7 +2,7 @@ import { findSource, loadSourceRegistry } from "../config.js";
 import { stableId } from "../id.js";
 import { evidenceStore } from "../review/evidence-store.js";
 import { selectContextInputSchema, type ReviewContext, type ReviewTarget, type SourceType, type TargetKind } from "../types.js";
-import { selectContextOutputSchema } from "./output-schemas.js";
+import { selectContextSuccessOutputSchema } from "./output-schemas.js";
 import { ok, toolError, type AppToolResult } from "./result.js";
 
 function sourceKindHint(sourceId: string | undefined, target: ReviewTarget | undefined): "local" | "github" | "generic" {
@@ -74,7 +74,7 @@ export async function selectContextHandler(input: unknown): Promise<AppToolResul
     });
 
     if (!args.sourceId || !args.target) {
-      const structuredContent = selectContextOutputSchema.parse({
+      const structuredContent = selectContextSuccessOutputSchema.parse({
           availableSources: filteredSources.map((source) => ({
             sourceId: source.id,
             sourceType: source.type,
@@ -146,7 +146,7 @@ export async function selectContextHandler(input: unknown): Promise<AppToolResul
     };
     evidenceStore.saveContext(context);
 
-    const structuredContent = selectContextOutputSchema.parse({
+    const structuredContent = selectContextSuccessOutputSchema.parse({
         contextId: context.contextId,
         selected: {
           sourceId: source.id,

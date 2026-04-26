@@ -33,7 +33,25 @@ const target = z.object({
   headRef: z.string().optional()
 });
 
-export const selectContextOutputSchema = z.object({
+const toolErrorOutputSchema = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+    nextActions: z.array(z.string())
+  }),
+  redactions: z.object({
+    count: z.number()
+  })
+});
+
+function withToolError<T extends z.ZodObject<z.ZodRawShape>>(schema: T) {
+  return schema.partial().extend({
+    error: toolErrorOutputSchema.shape.error.optional(),
+    redactions: toolErrorOutputSchema.shape.redactions.optional()
+  });
+}
+
+export const selectContextSuccessOutputSchema = z.object({
   contextId: z.string().optional(),
   selected: selectedTarget.optional(),
   availableSources: z.array(
@@ -51,7 +69,7 @@ export const selectContextOutputSchema = z.object({
   })
 });
 
-export const summarizeChangesOutputSchema = z.object({
+export const summarizeChangesSuccessOutputSchema = z.object({
   summaryId: z.string(),
   contextId: z.string(),
   target,
@@ -70,7 +88,7 @@ export const summarizeChangesOutputSchema = z.object({
   warnings: z.array(z.string())
 });
 
-export const reviewCodeOutputSchema = z.object({
+export const reviewCodeSuccessOutputSchema = z.object({
   reviewId: z.string(),
   summaryId: z.string(),
   verdict,
@@ -86,7 +104,7 @@ export const reviewCodeOutputSchema = z.object({
   nextActions: z.array(z.string())
 });
 
-export const reviewArchitectureOutputSchema = z.object({
+export const reviewArchitectureSuccessOutputSchema = z.object({
   architectureReviewId: z.string(),
   summaryId: z.string(),
   architectureRisk: z.enum(["low", "medium", "high", "unknown"]),
@@ -96,7 +114,7 @@ export const reviewArchitectureOutputSchema = z.object({
   nextActions: z.array(z.string())
 });
 
-export const exportPacketOutputSchema = z.object({
+export const exportPacketSuccessOutputSchema = z.object({
   packetId: z.string(),
   summaryId: z.string(),
   title: z.literal("GPT-5.5 Pro Engineering Review Packet"),
@@ -115,7 +133,26 @@ export const exportPacketOutputSchema = z.object({
   })
 });
 
-export const renderDashboardOutputSchema = z.object({
+export const createCodexTaskProposalSuccessOutputSchema = z.object({
+  proposalId: z.string(),
+  summaryId: z.string(),
+  packetId: z.string().optional(),
+  title: z.literal("Codex Task Proposal"),
+  targetSummary: z.string(),
+  recommendedExecutionMode: z.enum(["separate_worktree", "separate_branch"]),
+  findingIds: z.array(z.string()),
+  taskSliceCount: z.number(),
+  validationCommandCount: z.number(),
+  humanConfirmationCount: z.number(),
+  requiredApprovalGates: z.array(z.string()),
+  writeActionsIncluded: z.literal(false),
+  pasteSafety: z.object({
+    rawSecretsIncluded: z.literal(false),
+    repositoryInstructionsNeutralized: z.literal(true)
+  })
+});
+
+export const renderDashboardSuccessOutputSchema = z.object({
   dashboardId: z.string(),
   summaryId: z.string(),
   target,
@@ -184,3 +221,11 @@ export const renderDashboardOutputSchema = z.object({
   }),
   warnings: z.array(z.string()).max(8)
 });
+
+export const selectContextOutputSchema = withToolError(selectContextSuccessOutputSchema);
+export const summarizeChangesOutputSchema = withToolError(summarizeChangesSuccessOutputSchema);
+export const reviewCodeOutputSchema = withToolError(reviewCodeSuccessOutputSchema);
+export const reviewArchitectureOutputSchema = withToolError(reviewArchitectureSuccessOutputSchema);
+export const exportPacketOutputSchema = withToolError(exportPacketSuccessOutputSchema);
+export const createCodexTaskProposalOutputSchema = withToolError(createCodexTaskProposalSuccessOutputSchema);
+export const renderDashboardOutputSchema = withToolError(renderDashboardSuccessOutputSchema);
