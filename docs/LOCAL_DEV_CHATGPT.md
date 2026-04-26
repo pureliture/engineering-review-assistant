@@ -53,12 +53,13 @@ https://<tunnel-host>/mcp
 3. Enable Developer Mode.
 4. Create an app from the remote MCP server URL.
 5. Paste `https://<tunnel-host>/mcp`.
-6. Confirm that the six `review.*` tools are listed:
+6. Confirm that the seven `review.*` tools are listed:
    - `review.select_context`
    - `review.summarize_changes`
    - `review.review_code`
    - `review.review_architecture`
    - `review.export_engineering_packet`
+   - `review.create_codex_task_proposal`
    - `review.render_dashboard`
 7. Run the prompts in `docs/GOLDEN_PROMPTS.md`.
 8. Run a dashboard prompt after a review exists:

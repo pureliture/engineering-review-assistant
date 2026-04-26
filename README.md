@@ -9,6 +9,7 @@ Engineering Review Assistant는 ChatGPT에서 사용자가 명시적으로 선�
 - `review.review_code`
 - `review.review_architecture`
 - `review.export_engineering_packet`
+- `review.create_codex_task_proposal`
 - `review.render_dashboard`
 
 ## 로컬 실행

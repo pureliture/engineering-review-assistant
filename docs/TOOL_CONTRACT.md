@@ -53,9 +53,6 @@ Implemented V1 tools:
 4. `review.review_architecture`
 5. `review.export_engineering_packet`
 6. `review.render_dashboard`
-
-Planned Phase 10A read-only tool:
-
 7. `review.create_codex_task_proposal`
 
 ## 1. `review.select_context`
@@ -731,7 +728,7 @@ type EvidenceItem = {
 };
 
 type RedactionRecord = {
-  kind: "token" | "credential" | "private_key" | "env_var" | "unknown_secret";
+  kind: "token" | "credential" | "private_key" | "env_var" | "unknown_secret" | "private_path";
   path?: string;
   line?: number;
   value: "[REDACTED]";
@@ -747,7 +744,7 @@ type PromptInjectionEvent = {
 };
 ```
 
-## 7. `review.create_codex_task_proposal` (Phase 10A Planned)
+## 7. `review.create_codex_task_proposal` (Implemented Phase 10A)
 
 ### User-facing title
 
@@ -849,22 +846,20 @@ type CodexTaskProposalMeta = {
     evidenceRef: string;
     kind: string;
     path?: string;
-    redactedExcerpt: string;
+    url?: string;
+    excerpt?: string;
+    redacted: boolean;
   }>;
   redactions: RedactionRecord[];
   promptInjectionEvents: PromptInjectionEvent[];
   auditEventPreview: {
-    event: "codex_task_proposal_created";
-    proposalId: string;
-    summaryId: string;
-    packetId?: string;
+    eventType: "codex_task_proposal_created";
     sourceId: string;
-    targetKind: string;
-    findingIds: string[];
-    recommendedExecutionMode: "separate_worktree" | "separate_branch";
-    writesPerformed: false;
-    secretsRedacted: number;
-    promptInjectionEvents: number;
+    summaryId: string;
+    reviewIds: string[];
+    packetId?: string;
+    findingCount: number;
+    writeActionsIncluded: false;
   };
 };
 ```
@@ -874,10 +869,7 @@ type CodexTaskProposalMeta = {
 - `SUMMARY_NOT_FOUND`
 - `REVIEW_NOT_FOUND`
 - `PACKET_NOT_FOUND`
-- `CODEX_TASK_PROPOSAL_FAILED`
-- `WRITE_ACTION_NOT_ALLOWED`
-- `RAW_SECRET_BLOCKED`
-- `PROMPT_INJECTION_NEUTRALIZED`
+- `CREATE_CODEX_TASK_PROPOSAL_FAILED`
 
 ### Idempotency expectations
 
