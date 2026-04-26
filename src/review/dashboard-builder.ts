@@ -1,6 +1,7 @@
 import { stableId } from "../id.js";
 import { redactText } from "../policy/redaction.js";
-import type { ChangeSummary, Finding, PacketResult, ReviewResult, Severity, Verdict } from "../types.js";
+import type { ChangeSummary, Finding, PacketResult, ReviewResult } from "../types.js";
+import { severityRank, verdictForFindings } from "./change-signals.js";
 
 function mergeCounts(summary: ChangeSummary, reviews: ReviewResult[]): ReviewResult["counts"] {
   const findings = reviews.flatMap((review) => review.findings);
@@ -12,18 +13,6 @@ function mergeCounts(summary: ChangeSummary, reviews: ReviewResult[]): ReviewRes
     testsDetected: summary.changeSummary.testFilesChanged,
     secretsRedacted: summary.redactions.length
   };
-}
-
-function verdictFor(findings: Finding[]): Verdict {
-  if (findings.some((finding) => finding.severity === "critical")) return "high_risk";
-  if (findings.some((finding) => finding.severity === "important")) return "needs_attention";
-  return "low_risk";
-}
-
-function severityRank(severity: Severity): number {
-  if (severity === "critical") return 0;
-  if (severity === "important") return 1;
-  return 2;
 }
 
 function impactFor(additions = 0, deletions = 0): "low" | "medium" | "high" {
@@ -123,7 +112,7 @@ export function buildDashboardPayload(
         baseRef: summary.context.baseRef,
         headRef: summary.context.headRef
       },
-      verdict: verdictFor(findings),
+      verdict: verdictForFindings(findings),
       changeSummary: summary.changeSummary,
       counts,
       findings,
