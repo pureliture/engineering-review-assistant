@@ -95,7 +95,7 @@ type EvidenceItem = {
 
 ```ts
 type RedactionRecord = {
-  kind: "token" | "credential" | "private_key" | "env_var" | "unknown_secret";
+  kind: "token" | "credential" | "private_key" | "env_var" | "unknown_secret" | "private_path";
   path?: string;
   line?: number;
   value: "[REDACTED]";
@@ -238,22 +238,20 @@ type CodexTaskProposalMeta = {
     evidenceRef: string;
     kind: string;
     path?: string;
-    redactedExcerpt: string;
+    url?: string;
+    excerpt?: string;
+    redacted: boolean;
   }>;
   redactions: RedactionRecord[];
   promptInjectionEvents: PromptInjectionEvent[];
   auditEventPreview: {
-    event: "codex_task_proposal_created";
-    proposalId: string;
-    summaryId: string;
-    packetId?: string;
+    eventType: "codex_task_proposal_created";
     sourceId: string;
-    targetKind: string;
-    findingIds: string[];
-    recommendedExecutionMode: "separate_worktree" | "separate_branch";
-    writesPerformed: false;
-    secretsRedacted: number;
-    promptInjectionEvents: number;
+    summaryId: string;
+    reviewIds: string[];
+    packetId?: string;
+    findingCount: number;
+    writeActionsIncluded: false;
   };
 };
 ```

@@ -187,7 +187,7 @@ type PacketMeta = {
     kind: string;
     path?: string;
     url?: string;
-    redactedExcerpt: string;
+    excerpt: string;
   }>;
   redactions: Array<{
     kind: string;

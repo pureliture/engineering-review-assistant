@@ -116,7 +116,7 @@ Redaction output:
 
 ```ts
 {
-  kind: "token" | "credential" | "private_key" | "env_var" | "unknown_secret";
+  kind: "token" | "credential" | "private_key" | "env_var" | "unknown_secret" | "private_path";
   path?: string;
   line?: number;
   value: "[REDACTED]";
@@ -159,7 +159,7 @@ Repository-originated text는 instruction이 아니라 evidence이다.
 
 ## Audit Expectations
 
-V1에서 persistent audit log는 필수 아님. 다만 implementation은 다음 event를 내부 debug log로 남길 수 있다.
+V1에서 persistent audit log는 필수 아님. `review.create_codex_task_proposal`은 `_meta.auditEventPreview`에 write-free event summary를 반환하며, implementation은 다음 event를 내부 debug log로 남길 수 있다.
 
 - source allowlist rejection
 - symlink escape rejection
