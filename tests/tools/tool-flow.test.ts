@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import "../helpers/fixture-env.js";
 import { selectContextHandler } from "../../src/tools/context.js";
 import { summarizeChangesHandler } from "../../src/tools/summarize.js";
 import { reviewCodeHandler } from "../../src/tools/review-code.js";
 import { reviewArchitectureHandler } from "../../src/tools/review-architecture.js";
 import { exportEngineeringPacketHandler } from "../../src/tools/export-packet.js";
+import { createCodexTaskProposalHandler } from "../../src/tools/codex-task-proposal.js";
 import { containsUnsafeSecret } from "../../src/policy/redaction.js";
 
 test("review.select_context lists fixture sources when live config is empty", async () => {
@@ -62,6 +64,19 @@ test("full fixture local review flow returns sanitized report and packet", async
   assert.equal(packet.structuredContent?.title, "GPT-5.5 Pro Engineering Review Packet");
   assert.equal((packet.structuredContent?.pasteSafety as { rawSecretsIncluded: boolean }).rawSecretsIncluded, false);
   assert.equal(containsUnsafeSecret(packet), false);
+
+  const proposal = await createCodexTaskProposalHandler({
+    summaryId,
+    reviewIds: [codeReviewId, architectureReviewId],
+    packetId: packet.structuredContent?.packetId as string,
+    maxTaskSlices: 5
+  });
+  assert.equal(proposal.isError, undefined);
+  assert.equal(proposal.structuredContent?.title, "Codex Task Proposal");
+  assert.equal(proposal.structuredContent?.writeActionsIncluded, false);
+  assert.equal((proposal.structuredContent?.pasteSafety as { rawSecretsIncluded: boolean }).rawSecretsIncluded, false);
+  assert.match(String(proposal._meta?.taskBriefMarkdown), /Do not push/);
+  assert.equal(containsUnsafeSecret(proposal), false);
 });
 
 test("review.export_engineering_packet requires an existing review", async () => {

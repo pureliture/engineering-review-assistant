@@ -8,7 +8,10 @@ type RegisteredTool = {
   inputSchema?: {
     _def?: { shape?: () => Record<string, { description?: string }> };
   };
-  outputSchema?: unknown;
+  outputSchema?: {
+    _def?: { shape?: unknown };
+    shape?: unknown;
+  };
   annotations?: Record<string, unknown>;
   _meta?: Record<string, unknown>;
 };
@@ -25,6 +28,7 @@ test("tool descriptors are optimized for Developer Mode discovery", () => {
     "review.review_code",
     "review.review_architecture",
     "review.export_engineering_packet",
+    "review.create_codex_task_proposal",
     "review.render_dashboard"
   ];
 
@@ -59,4 +63,13 @@ test("tool input schemas include parameter descriptions for ambiguous fields", (
   const packetShape = tools["review.export_engineering_packet"].inputSchema?._def?.shape?.() ?? {};
   assert.match(packetShape.summaryId?.description ?? "", /review.summarize_changes/);
   assert.match(packetShape.reviewIds?.description ?? "", /review.review_code/);
+});
+
+test("tool output schemas stay object-shaped for MCP SDK compatibility", () => {
+  const tools = registeredTools();
+
+  for (const [name, tool] of Object.entries(tools)) {
+    const hasObjectShape = Boolean(tool.outputSchema?.shape ?? tool.outputSchema?._def?.shape);
+    assert.equal(hasObjectShape, true, `${name} outputSchema should be a Zod object schema, not a union/intersection wrapper`);
+  }
 });

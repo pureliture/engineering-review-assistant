@@ -158,12 +158,24 @@ export const renderDashboardInputSchema = z.object({
   includeDiffPreviews: z.boolean().optional().describe("Whether to include redacted diff previews in widget-only _meta. Defaults to true.")
 });
 
+export const createCodexTaskProposalInputSchema = z.object({
+  summaryId: summaryIdSchema,
+  reviewIds: z.array(reviewIdSchema).max(10).optional().describe("Optional review ids from review.review_code or review.review_architecture. Defaults to all reviews for summaryId."),
+  packetId: z.string().regex(/^packet_[a-f0-9]{16}$/).optional().describe("Optional packet id returned by review.export_engineering_packet."),
+  proposalFocus: z
+    .enum(["full", "critical_only", "tests", "security", "migration", "architecture"])
+    .optional()
+    .describe("Focus for the Codex task proposal."),
+  maxTaskSlices: z.number().int().positive().max(20).optional().describe("Maximum task slices to include. Upper bound is 20.")
+});
+
 export type SelectContextInput = z.infer<typeof selectContextInputSchema>;
 export type SummarizeChangesInput = z.infer<typeof summarizeChangesInputSchema>;
 export type ReviewCodeInput = z.infer<typeof reviewCodeInputSchema>;
 export type ReviewArchitectureInput = z.infer<typeof reviewArchitectureInputSchema>;
 export type ExportPacketInput = z.infer<typeof exportPacketInputSchema>;
 export type RenderDashboardInput = z.infer<typeof renderDashboardInputSchema>;
+export type CreateCodexTaskProposalInput = z.infer<typeof createCodexTaskProposalInputSchema>;
 export type ReviewTarget = z.infer<typeof reviewTargetSchema>;
 export type SourceType = z.infer<typeof sourceTypeSchema>;
 export type TargetKind = z.infer<typeof targetKindSchema>;

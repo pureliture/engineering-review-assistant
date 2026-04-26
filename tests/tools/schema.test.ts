@@ -1,12 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  createCodexTaskProposalInputSchema,
   exportPacketInputSchema,
   reviewArchitectureInputSchema,
   reviewCodeInputSchema,
   selectContextInputSchema,
   summarizeChangesInputSchema
 } from "../../src/types.js";
+import {
+  exportPacketOutputSchema,
+  createCodexTaskProposalOutputSchema,
+  renderDashboardOutputSchema,
+  reviewArchitectureOutputSchema,
+  reviewCodeOutputSchema,
+  selectContextOutputSchema,
+  summarizeChangesOutputSchema
+} from "../../src/tools/output-schemas.js";
 
 test("tool input schemas accept expected inputs", () => {
   assert.doesNotThrow(() => selectContextInputSchema.parse({ sourceType: "all" }));
@@ -15,6 +25,7 @@ test("tool input schemas accept expected inputs", () => {
   assert.doesNotThrow(() => reviewCodeInputSchema.parse({ summaryId: "sum_1234567890abcdef", focus: ["tests"] }));
   assert.doesNotThrow(() => reviewArchitectureInputSchema.parse({ summaryId: "sum_1234567890abcdef", focus: ["architecture"] }));
   assert.doesNotThrow(() => exportPacketInputSchema.parse({ summaryId: "sum_1234567890abcdef", packetFocus: "full" }));
+  assert.doesNotThrow(() => createCodexTaskProposalInputSchema.parse({ summaryId: "sum_1234567890abcdef", proposalFocus: "tests" }));
 });
 
 test("tool input schemas reject malformed inputs", () => {
@@ -22,4 +33,30 @@ test("tool input schemas reject malformed inputs", () => {
   assert.throws(() => summarizeChangesInputSchema.parse({ contextId: "" }));
   assert.throws(() => reviewCodeInputSchema.parse({ summaryId: "sum", maxFindings: 999 }));
   assert.throws(() => exportPacketInputSchema.parse({ summaryId: "sum_1234567890abcdef", reviewIds: ["rev_code_not_hex"] }));
+  assert.throws(() => createCodexTaskProposalInputSchema.parse({ summaryId: "sum_1234567890abcdef", maxTaskSlices: 999 }));
+});
+
+test("tool output schemas accept common tool error payloads", () => {
+  const errorPayload = {
+    error: {
+      code: "SOURCE_NOT_CONFIGURED",
+      message: "The requested sourceId is not configured in the repository allowlist.",
+      nextActions: ["Call review.select_context without a target to list configured sourceId values."]
+    },
+    redactions: {
+      count: 0
+    }
+  };
+
+  for (const schema of [
+    selectContextOutputSchema,
+    summarizeChangesOutputSchema,
+    reviewCodeOutputSchema,
+    reviewArchitectureOutputSchema,
+    exportPacketOutputSchema,
+    createCodexTaskProposalOutputSchema,
+    renderDashboardOutputSchema
+  ]) {
+    assert.doesNotThrow(() => schema.parse(errorPayload));
+  }
 });

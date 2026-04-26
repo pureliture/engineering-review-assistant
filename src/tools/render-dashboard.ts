@@ -1,7 +1,7 @@
 import { buildDashboardPayload } from "../review/dashboard-builder.js";
 import { evidenceStore } from "../review/evidence-store.js";
 import { renderDashboardInputSchema } from "../types.js";
-import { renderDashboardOutputSchema } from "./output-schemas.js";
+import { renderDashboardSuccessOutputSchema } from "./output-schemas.js";
 import { ok, toolError, type AppToolResult } from "./result.js";
 
 export async function renderDashboardHandler(input: unknown): Promise<AppToolResult> {
@@ -27,7 +27,7 @@ export async function renderDashboardHandler(input: unknown): Promise<AppToolRes
     const dashboard = buildDashboardPayload(summary, reviews, packet, {
       includeDiffPreviews: args.includeDiffPreviews ?? true
     });
-    const structuredContent = renderDashboardOutputSchema.parse(dashboard.structuredContent);
+    const structuredContent = renderDashboardSuccessOutputSchema.parse(dashboard.structuredContent);
 
     return ok(structuredContent, dashboard.meta, "Repository review dashboard ready.");
   } catch (error) {

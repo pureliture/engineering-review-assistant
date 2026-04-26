@@ -1,7 +1,7 @@
 import { evidenceStore } from "../review/evidence-store.js";
 import { buildArchitectureReview } from "../review/report-builder.js";
 import { reviewArchitectureInputSchema } from "../types.js";
-import { reviewArchitectureOutputSchema } from "./output-schemas.js";
+import { reviewArchitectureSuccessOutputSchema } from "./output-schemas.js";
 import { ok, toolError, type AppToolResult } from "./result.js";
 
 export async function reviewArchitectureHandler(input: unknown): Promise<AppToolResult> {
@@ -13,7 +13,7 @@ export async function reviewArchitectureHandler(input: unknown): Promise<AppTool
     const review = buildArchitectureReview(summary);
     evidenceStore.saveReview(review);
 
-    const structuredContent = reviewArchitectureOutputSchema.parse({
+    const structuredContent = reviewArchitectureSuccessOutputSchema.parse({
         architectureReviewId: review.reviewId,
         summaryId: review.summaryId,
         architectureRisk: review.counts.critical > 0 ? "high" : review.counts.important > 0 ? "medium" : "low",
