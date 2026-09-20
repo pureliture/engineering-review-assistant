@@ -5,15 +5,15 @@ import { detectPromptInjection, neutralizeRepositoryInstructions } from "../../s
 
 test("redactText redacts tokens, bearer strings, env values, private keys, sensitive URLs, and private paths", () => {
   const input = [
-    "GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz123456",
+    "GITHUB_TOKEN=ghp_" + "abcdefghijklmnopqrstuvwxyz123456",
     "Authorization: Bearer abcdefghijklmnop.qrstuvwxyz.123456",
     "DATABASE_URL=https://user:pass@example.com/db",
-    "PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+    "PRIVATE_KEY=-----BEGIN " + "PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
     "/Users/alice/private/repo/.env"
   ].join("\n");
 
   const result = redactText(input, ".env");
-  assert.equal(result.text.includes("ghp_abcdefghijklmnopqrstuvwxyz123456"), false);
+  assert.equal(result.text.includes("ghp_" + "abcdefghijklmnopqrstuvwxyz123456"), false);
   assert.equal(result.text.includes("Bearer abcdefghijklmnop"), false);
   assert.equal(result.text.includes("user:pass"), false);
   assert.equal(result.text.includes("BEGIN PRIVATE KEY"), false);

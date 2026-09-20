@@ -24,7 +24,7 @@ test("summarize_changes keeps raw evidence out of structuredContent", async () =
 
 test("allowlist errors explain recovery without exposing local paths", async () => {
   const localResult = await selectContextHandler({
-    sourceId: "/Users/ddalkak/Projects/private-repo",
+    sourceId: "/Users/example/Projects/private-repo",
     target: { kind: "local_working_tree" }
   });
 
@@ -33,7 +33,7 @@ test("allowlist errors explain recovery without exposing local paths", async () 
   assert.equal((localResult.structuredContent?.error as { code: string }).code, "SOURCE_NOT_CONFIGURED");
   assert.match((localResult.structuredContent?.error as { message: string }).message, /local repository allowlist/);
   assert.match(JSON.stringify(localResult.structuredContent), /review.select_context/);
-  assert.doesNotMatch(JSON.stringify(localResult), /\/Users\/ddalkak/);
+  assert.doesNotMatch(JSON.stringify(localResult), /\/Users\/example/);
 
   const githubResult = await selectContextHandler({
     sourceId: "https://github.com/example/private-repo",
